@@ -14,7 +14,7 @@ PKG = k8s.io/kube-state-metrics/pkg
 GO_VERSION = 1.13
 FIRST_GOPATH := $(firstword $(subst :, ,$(shell go env GOPATH)))
 BENCHCMP_BINARY := $(FIRST_GOPATH)/bin/benchcmp
-GOLANGCI_VERSION := v1.19.1
+GOLANGCI_VERSION := v1.22.2
 HAS_GOLANGCI := $(shell which golangci-lint)
 
 IMAGE = $(REGISTRY)/kube-state-metrics
@@ -124,11 +124,12 @@ endif
 
 clean:
 	rm -f kube-state-metrics
+	git clean -Xfd .
 
 e2e:
 	./tests/e2e.sh
 
-generate: build-local embedmd
+generate: build-local
 	@echo ">> generating docs"
 	@./scripts/generate-help-text.sh
 	@$(GOPATH)/bin/embedmd -w `find . -path ./vendor -prune -o -name "*.md" -print`
@@ -136,7 +137,13 @@ generate: build-local embedmd
 validate-manifests: examples
 	@git diff --exit-code
 
-examples: examples/standard examples/autosharding
+mixin: examples/prometheus-alerting-rules/alerts.yaml
+
+examples/prometheus-alerting-rules/alerts.yaml: jsonnet $(shell find jsonnet | grep ".libsonnet") scripts/mixin.jsonnet scripts/vendor
+	mkdir -p examples/prometheus-alerting-rules
+	jsonnet -J scripts/vendor scripts/mixin.jsonnet | gojsontoyaml > examples/prometheus-alerting-rules/alerts.yaml
+
+examples: examples/standard examples/autosharding mixin
 
 examples/standard: jsonnet $(shell find jsonnet | grep ".libsonnet") scripts/standard.jsonnet scripts/vendor VERSION
 	mkdir -p examples/standard
@@ -148,19 +155,11 @@ examples/autosharding: jsonnet $(shell find jsonnet | grep ".libsonnet") scripts
 	jsonnet -J scripts/vendor -m examples/autosharding --ext-str version="$(VERSION)" scripts/autosharding.jsonnet | xargs -I{} sh -c 'cat {} | gojsontoyaml > `echo {} | sed "s/\(.\)\([A-Z]\)/\1-\2/g" | tr "[:upper:]" "[:lower:]"`.yaml' -- {}
 	find examples -type f ! -name '*.yaml' -delete
 
-scripts/vendor: jb scripts/jsonnetfile.json scripts/jsonnetfile.lock.json
+scripts/vendor: scripts/jsonnetfile.json scripts/jsonnetfile.lock.json
 	cd scripts && jb install
 
-jsonnet:
-	 go install github.com/google/go-jsonnet/cmd/jsonnet
-
-jb:
-	 go install github.com/jsonnet-bundler/jsonnet-bundler/cmd/jb
-
-embedmd:
-	 go install github.com/campoy/embedmd
-
-$(BENCHCMP_BINARY):
-	 go install golang.org/x/tools/cmd/benchcmp
+install-tools:
+	@echo Installing tools from tools.go
+	@cat tools/tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
 
 .PHONY: all build build-local all-push all-container test-unit test-benchmark-compare container push quay-push clean e2e validate-modules shellcheck licensecheck lint generate embedmd

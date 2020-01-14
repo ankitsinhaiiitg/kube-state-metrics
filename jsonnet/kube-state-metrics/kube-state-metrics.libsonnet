@@ -119,6 +119,22 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
       rulesType.withApiGroups(['storage.k8s.io']) +
       rulesType.withResources([
         'storageclasses',
+        'volumeattachments',
+      ]) +
+      rulesType.withVerbs(['list', 'watch']),
+
+      rulesType.new() +
+      rulesType.withApiGroups(['admissionregistration.k8s.io']) +
+      rulesType.withResources([
+        'mutatingwebhookconfigurations',
+        'validatingwebhookconfigurations',
+      ]) +
+      rulesType.withVerbs(['list', 'watch']),
+
+      rulesType.new() +
+      rulesType.withApiGroups(['networking.k8s.io']) +
+      rulesType.withResources([
+        'networkpolicies',
       ]) +
       rulesType.withVerbs(['list', 'watch']),
     ];
@@ -141,11 +157,11 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
         containerPort.newNamed(8080, 'http-metrics'),
         containerPort.newNamed(8081, 'telemetry'),
       ]) +
-      container.mixin.livenessProbe.httpGet.withPath("/healthz") +
+      container.mixin.livenessProbe.httpGet.withPath('/healthz') +
       container.mixin.livenessProbe.httpGet.withPort(8080) +
       container.mixin.livenessProbe.withInitialDelaySeconds(5) +
       container.mixin.livenessProbe.withTimeoutSeconds(5) +
-      container.mixin.readinessProbe.httpGet.withPath("/") +
+      container.mixin.readinessProbe.httpGet.withPath('/') +
       container.mixin.readinessProbe.httpGet.withPort(8081) +
       container.mixin.readinessProbe.withInitialDelaySeconds(5) +
       container.mixin.readinessProbe.withTimeoutSeconds(5);
@@ -216,16 +232,16 @@ local k = import 'ksonnet/ksonnet.beta.4/k.libsonnet';
       local containerEnv = container.envType;
 
       local c = ksm.deployment.spec.template.spec.containers[0] +
-          container.withArgs([
-                  "--pod=$(POD_NAME)",
-                  "--pod-namespace=$(POD_NAMESPACE)",
-          ]) +
-          container.withEnv([
-              containerEnv.new('POD_NAME') +
-              containerEnv.mixin.valueFrom.fieldRef.withFieldPath('metadata.name'),
-              containerEnv.new('POD_NAMESPACE') +
-              containerEnv.mixin.valueFrom.fieldRef.withFieldPath('metadata.namespace'),
-          ]);
+                container.withArgs([
+                  '--pod=$(POD_NAME)',
+                  '--pod-namespace=$(POD_NAMESPACE)',
+                ]) +
+                container.withEnv([
+                  containerEnv.new('POD_NAME') +
+                  containerEnv.mixin.valueFrom.fieldRef.withFieldPath('metadata.name'),
+                  containerEnv.new('POD_NAMESPACE') +
+                  containerEnv.mixin.valueFrom.fieldRef.withFieldPath('metadata.namespace'),
+                ]);
 
       statefulset.new(ksm.name, 2, c, [], ksm.commonLabels) +
       statefulset.mixin.metadata.withNamespace(ksm.namespace) +

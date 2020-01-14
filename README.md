@@ -60,14 +60,14 @@ All additional compatibility is only best effort, or happens to still/already be
 #### Compatibility matrix
 At most, 5 kube-state-metrics and 5 [kubernetes releases](https://github.com/kubernetes/kubernetes/releases) will be recorded below.
 
-| kube-state-metrics | client-go  | **Kubernetes 1.11** | **Kubernetes 1.12** | **Kubernetes 1.13** | **Kubernetes 1.14** |  **Kubernetes 1.15** |
-|--------------------|------------|---------------------|---------------------|---------------------|---------------------|----------------------|
-| **v1.4.0**         |  v8.0.0    |         ✓           |         ✓           |         -           |         -           |          -           |
-| **v1.5.0**         |  v8.0.0    |         ✓           |         ✓           |         -           |         -           |          -           |
-| **v1.6.0**         |  v11.0.0   |         ✓           |         ✓           |         ✓           |         ✓           |          -           |
-| **v1.7.2**         |  v12.0.0   |         ✓           |         ✓           |         ✓           |         ✓           |          ✓           |
-| **v1.8.0**         |  v12.0.0   |         ✓           |         ✓           |         ✓           |         ✓           |          ✓           |
-| **master**         |  v12.0.0   |         ✓           |         ✓           |         ✓           |         ✓           |          ✓           |
+| kube-state-metrics | **Kubernetes 1.12** | **Kubernetes 1.13** | **Kubernetes 1.14** |  **Kubernetes 1.15** |  **Kubernetes 1.16** |
+|--------------------|---------------------|---------------------|---------------------|----------------------|----------------------|
+| **v1.5.0**         |         ✓           |         -           |         -           |          -           |          -           |
+| **v1.6.0**         |         ✓           |         ✓           |         -           |          -           |          -           |
+| **v1.7.2**         |         ✓           |         ✓           |         ✓           |          -           |          -           |
+| **v1.8.0**         |         ✓           |         ✓           |         ✓           |          ✓           |          -           |
+| **v1.9.1**         |         ✓           |         ✓           |         ✓           |          ✓           |          ✓           |
+| **master**         |         ✓           |         ✓           |         ✓           |          ✓           |          ✓           |
 - `✓` Fully supported version range.
 - `-` The Kubernetes cluster has features the client-go library can't use (additional API objects, etc).
 
@@ -79,8 +79,8 @@ release.
 #### Container Image
 
 The latest container image can be found at:
-* `quay.io/coreos/kube-state-metrics:v1.8.0`
-* `k8s.gcr.io/kube-state-metrics:v1.8.0`
+* `quay.io/coreos/kube-state-metrics:v1.9.1`
+* `k8s.gcr.io/kube-state-metrics:v1.9.1`
 
 **Note**:
 The recommended docker registry for kube-state-metrics is `quay.io`. kube-state-metrics on
@@ -216,10 +216,9 @@ service account token that has read-only access to the Kubernetes cluster.
 #### Kubernetes Deployment
 
 To deploy this project, you can simply run `kubectl apply -f examples/standard` and a
-Kubernetes service and deployment will be created. (Note: Adjust the apiVersion of some resource if your kubernetes cluster's version is not 1.8+, check the yaml file for more information). The service already has a
-`prometheus.io/scrape: 'true'` annotation and if you added the recommended
-Prometheus service-endpoint scraping configuration, Prometheus will pick it up automatically and you can start using the generated
-metrics right away.
+Kubernetes service and deployment will be created. (Note: Adjust the apiVersion of some resource if your kubernetes cluster's version is not 1.8+, check the yaml file for more information).
+
+To have Prometheus discover kube-state-metrics instances it is advised to create a specific Prometheus scrape config for kube-state-metrics that picks up both metrics endpoints. Annotation based discovery is discouraged as only one of the endpoints would be able to be selected, plus kube-state-metrics in most cases has special authentication and authorization requirements as it essentially grants read access through the metrics endpoint to most information available to it.
 
 **Note:** Google Kubernetes Engine (GKE) Users - GKE has strict role permissions that will prevent the kube-state-metrics roles and role bindings from being created. To work around this, you can give your GCP identity the cluster-admin role by running the following one-liner:
 

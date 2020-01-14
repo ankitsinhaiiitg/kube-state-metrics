@@ -25,13 +25,14 @@ import (
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/kube-state-metrics/pkg/metric"
+	generator "k8s.io/kube-state-metrics/pkg/metric_generator"
 )
 
 var (
 	descValidatingWebhookConfigurationHelp          = "Kubernetes labels converted to Prometheus labels."
 	descValidatingWebhookConfigurationDefaultLabels = []string{"namespace", "validatingwebhookconfiguration"}
 
-	validatingWebhookConfigurationMetricFamilies = []metric.FamilyGenerator{
+	validatingWebhookConfigurationMetricFamilies = []generator.FamilyGenerator{
 		{
 			Name: "kube_validatingwebhookconfiguration_info",
 			Type: metric.Gauge,
@@ -69,13 +70,7 @@ var (
 			Help: "Resource version representing a specific version of the ValidatingWebhookConfiguration.",
 			GenerateFunc: wrapValidatingWebhookConfigurationFunc(func(vwc *admissionregistration.ValidatingWebhookConfiguration) *metric.Family {
 				return &metric.Family{
-					Metrics: []*metric.Metric{
-						{
-							LabelKeys:   []string{"resource_version"},
-							LabelValues: []string{vwc.ObjectMeta.ResourceVersion},
-							Value:       1,
-						},
-					},
+					Metrics: resourceVersionMetric(vwc.ObjectMeta.ResourceVersion),
 				}
 			}),
 		},

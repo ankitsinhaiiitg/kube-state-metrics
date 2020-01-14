@@ -22,7 +22,7 @@ import (
 	admissionregistration "k8s.io/api/admissionregistration/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/kube-state-metrics/pkg/metric"
+	generator "k8s.io/kube-state-metrics/pkg/metric_generator"
 )
 
 func TestValidatingWebhookConfigurationStore(t *testing.T) {
@@ -44,7 +44,7 @@ func TestValidatingWebhookConfigurationStore(t *testing.T) {
 				# TYPE kube_validatingwebhookconfiguration_info gauge
 				# TYPE kube_validatingwebhookconfiguration_metadata_resource_version gauge
 				kube_validatingwebhookconfiguration_info{validatingwebhookconfiguration="validatingwebhookconfiguration1",namespace="ns1"} 1
-				kube_validatingwebhookconfiguration_metadata_resource_version{validatingwebhookconfiguration="validatingwebhookconfiguration1",namespace="ns1",resource_version="123456"} 1
+				kube_validatingwebhookconfiguration_metadata_resource_version{validatingwebhookconfiguration="validatingwebhookconfiguration1",namespace="ns1"} 123456
 				`,
 			MetricNames: []string{"kube_validatingwebhookconfiguration_info", "kube_validatingwebhookconfiguration_metadata_resource_version"},
 		},
@@ -66,14 +66,13 @@ func TestValidatingWebhookConfigurationStore(t *testing.T) {
 			# TYPE kube_validatingwebhookconfiguration_metadata_resource_version gauge
 			kube_validatingwebhookconfiguration_created{validatingwebhookconfiguration="validatingwebhookconfiguration2",namespace="ns2"} 1.501569018e+09
 			kube_validatingwebhookconfiguration_info{validatingwebhookconfiguration="validatingwebhookconfiguration2",namespace="ns2"} 1
-			kube_validatingwebhookconfiguration_metadata_resource_version{validatingwebhookconfiguration="validatingwebhookconfiguration2",namespace="ns2",resource_version="abcdef"} 1
 			`,
 			MetricNames: []string{"kube_validatingwebhookconfiguration_created", "kube_validatingwebhookconfiguration_info", "kube_validatingwebhookconfiguration_metadata_resource_version"},
 		},
 	}
 	for i, c := range cases {
-		c.Func = metric.ComposeMetricGenFuncs(validatingWebhookConfigurationMetricFamilies)
-		c.Headers = metric.ExtractMetricFamilyHeaders(validatingWebhookConfigurationMetricFamilies)
+		c.Func = generator.ComposeMetricGenFuncs(validatingWebhookConfigurationMetricFamilies)
+		c.Headers = generator.ExtractMetricFamilyHeaders(validatingWebhookConfigurationMetricFamilies)
 		if err := c.run(); err != nil {
 			t.Errorf("unexpected collecting result in %vth run:\n%s", i, err)
 		}

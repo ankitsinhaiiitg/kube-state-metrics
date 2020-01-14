@@ -22,7 +22,7 @@ import (
 	admissionregistration "k8s.io/api/admissionregistration/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/kube-state-metrics/pkg/metric"
+	generator "k8s.io/kube-state-metrics/pkg/metric_generator"
 )
 
 func TestMutatingWebhookConfigurationStore(t *testing.T) {
@@ -44,7 +44,7 @@ func TestMutatingWebhookConfigurationStore(t *testing.T) {
 				# TYPE kube_mutatingwebhookconfiguration_info gauge
 				# TYPE kube_mutatingwebhookconfiguration_metadata_resource_version gauge
 				kube_mutatingwebhookconfiguration_info{mutatingwebhookconfiguration="mutatingwebhookconfiguration1",namespace="ns1"} 1
-				kube_mutatingwebhookconfiguration_metadata_resource_version{mutatingwebhookconfiguration="mutatingwebhookconfiguration1",namespace="ns1",resource_version="123456"} 1
+				kube_mutatingwebhookconfiguration_metadata_resource_version{mutatingwebhookconfiguration="mutatingwebhookconfiguration1",namespace="ns1"} 123456
 				`,
 			MetricNames: []string{"kube_mutatingwebhookconfiguration_info", "kube_mutatingwebhookconfiguration_metadata_resource_version"},
 		},
@@ -66,14 +66,13 @@ func TestMutatingWebhookConfigurationStore(t *testing.T) {
 			# TYPE kube_mutatingwebhookconfiguration_metadata_resource_version gauge
 			kube_mutatingwebhookconfiguration_created{mutatingwebhookconfiguration="mutatingwebhookconfiguration2",namespace="ns2"} 1.501569018e+09
 			kube_mutatingwebhookconfiguration_info{mutatingwebhookconfiguration="mutatingwebhookconfiguration2",namespace="ns2"} 1
-			kube_mutatingwebhookconfiguration_metadata_resource_version{mutatingwebhookconfiguration="mutatingwebhookconfiguration2",namespace="ns2",resource_version="abcdef"} 1
 			`,
 			MetricNames: []string{"kube_mutatingwebhookconfiguration_created", "kube_mutatingwebhookconfiguration_info", "kube_mutatingwebhookconfiguration_metadata_resource_version"},
 		},
 	}
 	for i, c := range cases {
-		c.Func = metric.ComposeMetricGenFuncs(mutatingWebhookConfigurationMetricFamilies)
-		c.Headers = metric.ExtractMetricFamilyHeaders(mutatingWebhookConfigurationMetricFamilies)
+		c.Func = generator.ComposeMetricGenFuncs(mutatingWebhookConfigurationMetricFamilies)
+		c.Headers = generator.ExtractMetricFamilyHeaders(mutatingWebhookConfigurationMetricFamilies)
 		if err := c.run(); err != nil {
 			t.Errorf("unexpected collecting result in %vth run:\n%s", i, err)
 		}

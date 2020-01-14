@@ -38,6 +38,7 @@ var (
 		"limitranges":                     struct{}{},
 		"mutatingwebhookconfigurations":   struct{}{},
 		"namespaces":                      struct{}{},
+		"networkpolicies":                 struct{}{},
 		"nodes":                           struct{}{},
 		"persistentvolumes":               struct{}{},
 		"persistentvolumeclaims":          struct{}{},
@@ -51,5 +52,6 @@ var (
 		"statefulsets":                    struct{}{},
 		"storageclasses":                  struct{}{},
 		"validatingwebhookconfigurations": struct{}{},
+		"volumeattachments":               struct{}{},
 	}
 )
